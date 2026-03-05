@@ -1,0 +1,24 @@
+pacotes <- c("rvest")
+
+if(sum(as.numeric(!pacotes %in% installed.packages())) != 0){
+  instalador <- pacotes[!pacotes %in% installed.packages()]
+  for(i in 1:length(instalador)) {
+    install.packages(instalador, dependencies = TRUE)
+    break()}
+  sapply(pacotes, require, character = TRUE) 
+} else {
+  sapply(pacotes, require, character = TRUE) 
+}
+
+
+url <- "https://cran.r-project.org/web/packages/available_packages_by_name.html#available-packages-A"
+
+web <- read_html(url)
+
+elements <- html_elements(web, css = "body > div > table")
+
+tabela <- html_table(elements)
+tabela
+
+df <- data.frame(tabela[[1]])
+qtde_pacotes <- nrow(df) - 1L

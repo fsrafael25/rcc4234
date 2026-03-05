@@ -1,0 +1,6 @@
+"0","suicidios_india <- read_delim(""suicidios_india.csv"",
+                              delim = "","")
+"
+"2","Error in read_delim(""suicidios_india.csv"", delim = "","") : 
+  não foi possível encontrar a função ""read_delim""
+"

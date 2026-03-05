@@ -1,0 +1,574 @@
+---
+title: "*Era Uma Vez* ~~em Hollywood~~ *no R*"
+output: html_document
+date: "2026-03-02"
+---
+
+![](images/holywood.jpg)
+
+# Primeiros Passos no R
+
+O R é uma linguagem de programação orientada a objetos. Isso significa que, na prática, **TUDO** no R é um **objeto*.* Mas o que exatamente isso quer dizer?
+
+Gosto da seguinte analogia: *uma palavra está para a língua portuguesa assim como um objeto está para o R.*
+
+Uma palavra é uma combinação de letras que carrega determinada carga semântica. Ao pronunciá-la ou escrevê-la, ativamos um significado socialmente compartilhado. No R, um objeto cumpre função análoga: ele é um nome ao qual associamos um conteúdo armazenado na memória do computador.
+
+Em termos simples, é um identificador que "guarda" algo dentro dele. Esse conteúdo pode ser um número, um vetor, um *data frame* (uma base de dados), uma função ou estruturas ainda mais complexas. Sempre que evocamos o nome do objeto no código, o R recupera o conteúdo a ele vinculado.
+
+Assim como as línguas naturais são dinâmicas e incorporam novas palavras (eg. gírias, regionalismos, neologismos), também podemos criar novos objetos em R a qualquer momento. A atribuição (`<-`), como veremos a seguir, é, nesse sentido, um ato de nomeação. Quando fazemos, por exemplo,
+
+```{r}
+populacao <- 214000000
+```
+
+
+estamos literalmente batizando um dado.
+
+Além disso, as palavras exercem funções distintas na estrutura da língua: substantivos designam entidades, verbos expressam ações, adjetivos qualificam. No R, os objetos também possuem naturezas e funções diversas. Alguns armazenam dados (são os nossos "substantivos"). Outros representam procedimentos (são os nossos "verbos"). Há ainda objetos que organizam informações em estruturas mais complexas.
+
+Aprender a programar envolve, em algum nível, um processo de alfabetização. É necessário compreender o vocabulário, a sintaxe e a gramática da linguagem. A fluência surge quando deixamos de apenas reconhecer comandos isolados e passamos a estruturar raciocínios, e até narrativas, por meio deles.
+
+E é justamente por isso que começaremos pelo elemento mais básico dessa gramática: **a criação de objetos**.
+
+<br>
+
+# Criando Objetos no R
+
+Para criar um objeto no R, utilizamos o operador de atribuição (`<-`). Ele é composto pelo sinal de menor seguido de um hífen, sem espaços (atalho: `Alt + -` no RStudio). Exemplo:
+
+```{r}
+x <- 42
+```
+
+
+No código acima temos três elementos:
+
+* um identificador possível (`x`);
+
+* o operador de atribuição (`<-`);
+
+* um valor (`42`).
+
+<br>
+
+A partir desse momento, o nome `x` passa a representar o valor `42`.
+
+Fomos treinados, desde cedo, a associar símbolos a valores. Duvidam?
+
+$$x = 42$$
+
+O efeito inicial parece semelhante: associamos o símbolo `x` ao valor `42`.
+
+A diferença, e ela é importante, é que, na programação, essa associação é operacional. Estamos instruindo o computador a armazenar o valor `42` sob o nome `x`. Essa associação depende do estado da execução e pode ser modificada ao longo do tempo.
+
+Podemos verificar o conteúdo do objeto simplesmente digitando seu nome:
+
+```{r}
+x
+```
+
+
+O R retornará o valor armazenado.
+
+Também podemos realizar operações com esse objeto:
+
+```{r}
+x + 2
+```
+
+
+Observe que o resultado da operação é exibido na tela, mas o valor de `x` continua sendo "42" . Para alterá-lo, precisamos realizar uma nova atribuição:
+
+```{r}
+x <- x + 2
+x
+```
+
+**Porém, aqui, cabem dois avisos importantes:**
+
+1. A avaliação se dá da direita para a esquerda! Perceberam que tudo o que está à direita do operador de atribuição é resolvido primeiro?
+
+Quando executamos:
+```{r}
+x <- x + 2
+```
+
+o R calcula inicialmente a expressão à direita (`x + 2`). Se, naquele momento, `x` valia `42`, o R calcula `42 + 2`, obtém `44` e somente então substitui o valor anteriormente armazenado em `x`.
+
+Portanto, a leitura correta não é "x passa a ser x + 2" no sentido matemático tradicional. A leitura operacional é: "R, pegue o valor atual de `x`, some `2` e armazene o resultado novamente em `x`".
+
+<br>
+
+2. A sobrescrita é silenciosa! O R não pede confirmação para sobrescrever um objeto.
+
+Você deu um comando. O R executou.
+
+Se você atribui um novo valor a um objeto já existente, o valor anterior é substituído imediatamente, sem aviso, sem confirmação. Não há uma botão "desfazer" e, tampouco, o recurso `Ctrl + Z`.
+
+Programação envolve responsabilidade sobre o estado do ambiente.
+
+Outro ponto fundamental: o R é *case sensitive*. **Ele diferencia letras maiúsculas de minúsculas.**
+
+Logo, `x` (minúsculo) é diferente de `X` (maiúsculo).
+
+Se você executar:
+
+```{r echo=TRUE, error=TRUE}
+X
+```
+
+
+**o R não saberá do que se trata, pois nenhum objeto com esse nome foi criado.**
+
+Em programação, nomes são identificadores exatos. A linguagem não faz suposições.
+
+**Também é importante que adotemos algumas boas práticas ao criar objetos.** Isso evitará confusões, especialmente para quem está começando, e ambiguidades nos comandos do R.
+
+Nesse sentido, peço que, a partir de agora, **vocês sigam a seguinte etiqueta ao nomear objetos:**
+
+* Utilize **sempre** letras minúsculas;
+
+* **Não** use caracteres especiais ou acentos (por exemplo, "ç", "á", "é");
+
+* **Não** utilize espaços nos nomes. Em vez de "meu primeiro objeto", prefira `meu_primeiro_objeto`;
+
+* **Não** inicie nomes com números.
+
+**Essas convenções não são capricho estético.** Elas facilitam a leitura do código, reduzem a probabilidade de erros e tornam seus *scripts* mais claros e reprodutíveis.
+
+**Aos poucos, vocês perceberão que programar bem não é apenas fazer o código funcionar, mas fazê-lo funcionar de forma organizada, legível e consistente.**
+
+Também podemos guardar valores textuais em objetos e, para isso, devemos utilizar aspas:
+
+```{r}
+sigla1 <- "fearp"
+```
+
+ou
+
+```{r}
+sigla2 <- 'fearp'
+```
+
+
+Tanto aspas duplas quanto aspas simples funcionam para indicar que estamos armazenando texto. Ao utilizar aspas, estamos informando ao R que aquele conteúdo deve ser interpretado como uma sequência de caracteres, e não como um nome de objeto ou um número.
+
+Nesse ponto, já sabemos criar objetos e armazenar neles diferentes tipos de conteúdo (números ou textos).
+
+Mas criar objetos é apenas o primeiro passo.
+
+Em programação, não basta guardar informações; é preciso operar sobre elas.
+
+E é justamente aqui que entram os operadores.
+
+# Operadores na linguagem R
+
+Até aqui, já conhecemos um operador da linguagem R: o operador de atribuição (`<-`). Foi ele que nos permitiu criar objetos e associar nomes a conteúdos.
+
+Mas o `<-` não é o único operador existente. O R dispõe de diversos operadores, cada um com uma função específica.
+
+Primeiro, temos os **operadores aritméticos**, que realizam cálculos numéricos:
+
+```{r}
+2 + 2   # soma
+3 - 1   # subtração
+4 * 5   # multiplicação
+3 / 2   # divisão
+7 ^ 2   # exponenciação
+0:100   # sequência de 0 a 100
+```
+
+
+O operador : merece atenção especial. Ele cria uma sequência de números inteiros entre dois valores.
+
+Em seguida, temos os **operadores relacionais**, que produzem comparações lógicas:
+
+```{r}
+3 == 3  # igualdade
+5 != 0  # diferente de
+2 > 9   # maior que
+1 < 8   # menor que
+5 >= 5  # maior ou igual
+4 <= 1  # menor ou igual
+```
+
+
+Observe que os operadores relacionais não retornam números. Eles retornam valores lógicos: `TRUE` ou `FALSE`.
+
+Valores lógicos são respostas do tipo "sim" ou "não" que o computador utiliza para tomar decisões.
+
+Podemos utilizar esses operadores com o nosso objeto `x`:
+
+```{r}
+x
+x + 10
+x * 3
+x == 44
+x > 100
+```
+
+
+Se `x` valia `44`, então:
+
+* `x == 44` retorna `TRUE`
+
+* `x > 100` retorna `FALSE`
+
+Isso nos mostra algo importante: operadores produzem resultados. **Esses resultados podem ser números ou valores lógicos,** e ambos podem ser armazenados em objetos.
+
+Por exemplo, podemos utilizar alguns operadores aprendidos anteriormente da seguinte forma:
+
+```{r echo=TRUE}
+sigla1 == sigla2
+```
+
+```{r}
+sigla1 != sigla2
+```
+
+É possível guardar valores lógicos em objetos:
+
+```{r echo=TRUE}
+resultado1 <- sigla1 == sigla2
+
+resultado1
+```
+
+```{r echo=TRUE}
+resultado2 <- sigla1 != sigla2
+
+resultado2
+```
+
+Uma última dica importante sobre o que estamos falando, é que as respostas `TRUE` e `FALSE` podem ser simplificadas para `T` e `F`, respectivamente:
+
+```{r}
+TRUE == T
+TRUE != T
+FALSE == T
+FALSE == F
+```
+
+Até aqui, utilizamos operadores representados por símbolos (`<-`, `+`, `-`, `==`).
+
+Mas o R também executa procedimentos por meio de funções, que possuem uma estrutura ligeiramente diferente. É sobre elas que falaremos a seguir.
+
+# Funções e Argumentos na Linguagem R
+
+Funções são tipos especiais de objetos no R. **Seu nome, na maioria das vezes, vem seguido de parênteses e podemos entendê-las como ordens dadas ao computador.**
+
+Uma função executa um conjunto organizado de instruções. Em termos simples, ela é uma espécie de "receita" que o computador sabe seguir.
+
+Pense em uma receita de bolo de chocolate. A receita descreve um passo a passo: misture os ingredientes, leve ao forno, aguarde determinado tempo. Se você seguir os passos corretamente, obterá sempre um resultado previsível, isto é, o bolo de chocolate; e não uma feijoada.
+
+Em programação, chamamos esse conjunto organizado de instruções de **algoritmo**.
+
+Não precisamos de uma definição formal neste momento. **Basta entender que um algoritmo é uma sequência estruturada e finita de passos para alcançar um objetivo determinado.**
+
+Uma função, portanto, é um objeto que carrega dentro de si um algoritmo. Quando chamamos a função, estamos pedindo ao R que execute aquela sequência de passos.
+
+Vamos utilizar um exemplo para esclarecer:
+
+```{r}
+round(x = 3.141592)
+```
+
+No comando anterior, não criamos um novo objeto. Declaramos uma função cujo objetivo é realizar o arredondamento numérico. Nesse caso, `x` é um **argumento** da função. 
+
+Argumentos são complementos às ordens dadas. São as informações que a função precisa para executar sua tarefa.
+
+Observe o que acontece se chamarmos a função sem fornecer argumentos:
+
+```{r echo=TRUE, error=TRUE}
+round()
+```
+
+Por que houve um erro?
+
+Porque a função round() precisa saber o que arredondar. Sem um valor, o algoritmo não tem como operar.
+
+Voltemos ao exemplo:
+```{r}
+round(x = 3.141592)
+```
+
+Por que o R transforma 3.141592 no valor inteiro 3?
+
+Porque, por padrão, a função arredonda para zero casas decimais.
+
+Podemos complementar a ordem com um novo argumento:
+```{r}
+round(x = 3.141592, digits = 3)
+```
+
+Agora estamos informando explicitamente quantas casas decimais desejamos manter.
+
+**Como saber quais são os argumentos de uma determinada função?**
+
+Existem pelo menos duas maneiras:
+```{r}
+?round
+```
+
+ou
+```{r}
+args(round)
+```
+
+## A Função `c()`: sua eterna aliada
+
+**Podemos guardar bases de dados inteiras em objetos.** Porém, antes disso, precisamos entender como guardar mais de uma informação dentro de um mesmo objeto.
+
+Suponha que desejamos armazenar vários números em um único objeto.
+
+O que acontece se tentarmos algo assim?
+
+```{r echo=TRUE, error=TRUE}
+vetor <- 1 3 5 7 9 11
+```
+
+
+Ou:
+
+```{r echo=TRUE, error=TRUE}
+vetor <- 1, 3, 5, 7, 9, 11
+```
+
+
+Ou ainda:
+
+```{r echo=TRUE, error=TRUE}
+vetor <- (1, 3, 5, 7, 9, 11)
+```
+
+
+**Nenhuma dessas formas funciona.**
+
+O R precisa que informemos explicitamente como esses valores devem ser organizados.
+
+A resposta está na função *concatenate*, representada por `c()`.
+
+```{r}
+vetor <- c(1, 3, 5, 7, 9, 11)
+
+vetor
+```
+
+
+A função `c()` combina vários elementos em uma única estrutura. Essa estrutura recebe o nome de **vetor**.
+
+**Um vetor é um objeto que armazena múltiplos valores do mesmo tipo.**
+
+O mesmo raciocínio vale para valores textuais:
+
+```{r}
+nomes <- c("mariana", "pedro", "daniela")
+
+nomes
+```
+
+
+Agora temos um vetor de caracteres.
+
+Perceba algo importante: todos os elementos dentro de um vetor devem ser do mesmo tipo. O R impõe essa coerência internamente.
+
+## Coerção de Tipos no R
+
+Porém, o que acontece se tentarmos misturar tipos diferentes dentro do mesmo vetor?
+
+Observe o exemplo:
+
+```{r}
+vetor_misto <- c(1, 2, "3")
+
+vetor_misto
+```
+
+
+O que ocorreu aqui?
+
+Embora tenhamos inserido dois números (`1` e `2`) e um valor textual (`"3"`), o R transformou todos os elementos em texto.
+
+Podemos verificar isso:
+
+```{r}
+class(vetor_misto)
+```
+
+
+O resultado será *character*.
+
+Isso ocorre porque o R precisa manter todos os elementos do vetor no mesmo tipo. **Quando há mistura, ele realiza automaticamente uma coerção de tipo.**
+
+Coerção é o processo pelo qual o R converte valores de um tipo para outro, a fim de preservar a consistência da estrutura.
+
+De forma simplificada, podemos pensar que existe uma hierarquia interna de tipos. Quando tipos diferentes são combinados, o R promove todos ao tipo mais “abrangente”. A ordem hierárquia, de forma decrescente, é a seguinte: textos, números, valores lógicos.
+
+Por exemplo:
+
+```{r}
+c(TRUE, 1)
+```
+
+
+Aqui, o valor lógico TRUE será convertido em número (`1`).
+
+```{r}
+c(1, "a")
+```
+
+
+Aqui, os números serão convertidos em texto.
+
+Esse comportamento é automático.
+
+Mas também podemos realizar coerções de forma explícita, utilizando funções específicas, como:
+
+```{r}
+as.numeric("10")
+
+as.character(10)
+```
+
+
+Entender coerção é fundamental porque ela influencia silenciosamente muitos resultados em análise de dados.
+
+## Variáveis Categóricas e a Função `factor()`
+
+Até aqui, criamos vetores numéricos e vetores textuais.
+
+Mas em análise de dados, muitas vezes trabalhamos com variáveis categóricas, isto é, variáveis cujos valores representam categorias.
+
+Vamos criar um exemplo simples:
+
+```{r}
+nivel_escolarizacao <- c("fundamental", "médio", "graduação")
+
+nivel_escolarizacao
+```
+
+
+Neste momento, o R entende esse objeto como um vetor de caracteres.
+
+Podemos verificar isso utilizando a função `class()`:
+
+```{r}
+class(nivel_escolarizacao)
+```
+
+
+O resultado será *character*.
+
+Entretanto, quando estamos lidando com categorias, especialmente em análises estatísticas, é **importante que o R reconheça essa variável como categórica.**
+
+Para isso, utilizamos a função `factor()`:
+
+```{r}
+nivel_escolarizacao <- factor(nivel_escolarizacao)
+```
+
+
+Agora, ao verificarmos novamente a classe do objeto:
+
+```{r}
+class(nivel_escolarizacao)
+```
+
+
+O resultado será *factor*.
+
+E se simplesmente exibirmos o objeto:
+
+```{r}
+nivel_escolarizacao
+```
+
+
+Perceberemos que o R passou a tratá-lo como uma variável categórica.
+
+# Juntando Objetos para Criar uma Base de Dados
+
+Até aqui, criamos diversos vetores. **Cada vetor pode ser entendido como uma variável.**
+
+Quando colocamos vetores lado a lado, estamos criando uma estrutura tabular, isto é, uma base de dados que o R costuma chamar de *data frame*.
+
+Vamos construir um exemplo:
+
+```{r}
+empresas <- c("Empresa A", NA, "Empresa C", "Empresa D", "Empresa E")
+funcionarios <- c(100, 5000, 230, 12000, 1700)
+presenca_bolsa <- c(FALSE, TRUE, NA, TRUE, TRUE)
+sede_brasil <- c(NA, 0, 1, 0, 0)
+diretor_executivo <- c(NA, "daniel", "carlos", "carla", "solange")
+```
+
+
+**Observe que `NA` representa ausência de informação.**
+
+Agora podemos reunir esses vetores em um único objeto utilizando a função *data.frame()*:
+
+```{r}
+dados <- data.frame(
+  empresas,
+  funcionarios,
+  presenca_bolsa,
+  sede_brasil,
+  diretor_executivo
+)
+```
+
+
+Acabamos de criar uma base de dados chamada `dados`:
+
+```{r}
+dados
+```
+
+# Salvando Objetos Criados (ou Carregados) no R
+
+Até aqui, criamos diversos objetos dentro do ambiente do R. Mas o que acontece se fecharmos o programa?
+
+**Por padrão, os objetos existem apenas durante a sessão ativa.** Para utilizá-los posteriormente, precisamos salvá-los em um arquivo.
+
+Para isso, utilizamos a função `save()`:
+
+```{r}
+save(dados, file = "dados.RData")
+```
+
+No comando acima:
+
+* `dados` é o objeto que desejamos salvar;
+
+* `file` indica o nome do arquivo que será criado no diretório de trabalho.
+
+O arquivo gerado possui a extensão `.RData` e armazena o objeto exatamente como ele está naquele momento.
+
+Observe que podemos salvar qualquer tipo de objeto: bases de dados, gráficos, modelos estatísticos, listas, entre outros.
+
+# Carregando Objetos Salvos (`.RData`)
+
+Para recuperar objetos previamente salvos, utilizamos a função `load()`:
+
+```{r}
+load("dados.RData")
+```
+
+
+Ao executar esse comando, o objeto armazenado no arquivo será recriado no ambiente do R com o mesmo nome original.
+
+Por exemplo:
+
+```{r}
+load("spam.RData")
+```
+
+
+Depois disso, podemos simplesmente chamar o objeto:
+
+```{r}
+spam
+```
+
+Encerramos nossa primeira *Recipe* por aqui!
