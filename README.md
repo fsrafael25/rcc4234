@@ -71,6 +71,8 @@ Meu compromisso é oferecer estrutura, orientação e um ambiente intelectualmen
   - Objetos, vetores, tipos de dados;
   - Operadores básicos;
   - Primeiros *scripts*.
+  
+Leituras recomendadas: Hands-On Programming with R (capítulos de 1 a 5); ou R for Data Science (capítulos 8, 12, 13, 14, 16).
 
 <br>
 
@@ -81,6 +83,9 @@ Meu compromisso é oferecer estrutura, orientação e um ambiente intelectualmen
   - Manipulação básica;
   - Indexação e subconjuntos;
   - Introdução ao fluxo de dados.
+
+Leituras recomendadas: Hands-On Programming with R (capítulos de 6 e 7); ou R for Data Science (capítulos 7, 8 e 20).
+
 
 <br>
 

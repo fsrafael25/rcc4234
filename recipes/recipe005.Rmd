@@ -1,0 +1,783 @@
+---
+title: "Back to the ~~Future~~ Data"
+output: html_document
+date: "2026-03-11"
+---
+
+![](images/bttf.png)
+
+# Estruturas de Dados e Manipulação
+
+Pessoal, tudo bem?
+
+Um dos objetivos das próximas aulas será apresentar a vocês algumas das principais formas de estruturação de bases de dados e introduzi-los ao universo da manipulação desses dados.
+
+Na minha visão, ainda estamos em uma fase de ambientação e alfabetização na linguagem R, embora eu reconheça que já avançamos bastante até aqui!
+
+Nos tutoriais anteriores, abrimos algumas bases de dados que eu havia disponibilizado para vocês. A partir de agora, começaremos também a trabalhar com a obtenção de bases diretamente em fontes externas.
+
+Dito isso, hoje baixaremos dados do ***UNESCO Institute for Statistics***, disponíveis em: https://databrowser.uis.unesco.org/.
+
+O caminho será o seguinte: cliquem em *Browse Data* >> *Education* >> *SDG4 Monitoring* >> *Basic Education* >> *Minimum proficiency (Indicator 4.1.1)*. Em seguida, baixem os dados referentes ao tópico *Proportion of students at the end of lower secondary education achieving at least a minimum proficiency level in mathematics, both sexes (%)*.
+
+**Atenção:** os dados baixados *não* devem incluir metadados nem notas de rodapé. Quanto à extensão do arquivo, isso fica a critério de cada um. Eu seguirei utilizando a extensão `.csv`.
+
+Feito isso, muito provavelmente vocês terão baixado um arquivo `.zip` em alguma pasta do computador. Dentro desse arquivo compactado estará o arquivo de dados, que pode ser `data.csv` ou outro nome semelhante, a depender da escolha feita no momento do *download*. Descompactem esse arquivo e coloquem-no no seu ambiente de trabalho.
+
+Agora, vamos carregar a base baixada:
+```{r}
+library(readr)
+
+unesco <- read_csv("data.csv")
+```
+
+
+A primeira coisa que vocês talvez tenham percebido é que esse conjunto de dados possui 705 linhas. No entanto, no site em que o baixamos, a tabela de visualização não parecia ter tantas linhas. Ali, à primeira vista, parecia que cada linha correspondia a um país e, evidentemente, não existem 700 países no mundo. Então, o que aconteceu?
+
+Aconteceu, meus caros, que dados do mundo real raramente vêm no formato mais simples ou mais intuitivo. Esse é um primeiro choque de realidade importante: os exemplos de livro costumam ser muito mais organizados do que os dados que encontramos fora deles. Por isso, antes de sair analisando qualquer base, é fundamental parar e observar com atenção a sua estrutura.
+
+O objeto `unesco` está em formato ***long.*** Isso não significa que as observações estejam nas colunas e as variáveis nas linhas. Em bases no formato ***long***, continuamos tendo, em regra, linhas representando registros e colunas representando variáveis. A diferença é que uma mesma unidade de análise, como um país, pode aparecer em várias linhas, porque cada linha pode representar um ano, uma categoria, um indicador ou alguma outra desagregação adicional.
+
+Já no formato ***wide***, essas informações ficam mais “espalhadas” em colunas. Assim, em vez de um país aparecer repetidamente em várias linhas, ele pode aparecer uma única vez, com diferentes colunas representando anos, indicadores ou categorias distintas.
+
+**Aqui, eu recomendo que vocês gastem algum tempo explorando a base de dados que acabaram de carregar.**
+
+Para um iniciante, uma grande desvantagem de se trabalhar com uma base de dados no formato *long* é a dificuldade inicial de aplicar algumas das funções exploratórias que aprendemos até agora.
+
+Por exemplo, se aplicarmos diretamente a função `mean()` ao objeto `unesco`, o resultado obtido corresponderá à média da proporção de estudantes que atingiram o nível mínimo de proficiência em matemática considerando todo o período temporal presente na base, e não apenas um ano específico.
+
+O que quero dizer é o seguinte: para alguém que está começando agora, descobrir qual foi a média desse indicador apenas para o ano 2000, por exemplo, pode parecer um pequeno desafio e, em alguns casos, até um gatilho para ansiedade.
+
+**Outro detalhe que vocês talvez já tenham percebido é que algumas linhas da base não representam países individuais, mas sim agregações regionais, como continentes ou grandes regiões do mundo.** Isso adiciona mais uma camada de complexidade, porque agora precisamos também prestar atenção a quem exatamente cada linha representa.
+
+Mas calma. Vamos com tranquilidade.
+
+Respirem.
+
+Antes de tentar fazer qualquer cálculo ou análise, o primeiro passo sempre deve ser entender a estrutura da base de dados.
+
+Comecem explorando o *dataset* de vocês. Usem e abusem das funções:
+```{r eval=FALSE}
+dim()
+names()
+str()
+head()
+```
+
+Essas funções ajudam vocês a responder perguntas fundamentais, como:
+
+1. Quantas observações existem?
+
+2. Quais são as variáveis disponíveis?
+
+3. Qual é o tipo de cada variável?
+
+4. Como os dados estão organizados nas primeiras linhas?
+
+Se julgarem necessário, renomeiem as colunas da base. Dar nomes mais claros às variáveis ajuda muito a aumentar a sensação de controle sobre o que vocês estão fazendo, algo especialmente importante quando estamos aprendendo uma nova linguagem de programação.
+
+
+## Avançando na Exploração de Dados
+
+Uma pergunta inicial que podemos fazer a respeito dessa base de dados é: qual é o período temporal que ela cobre?
+
+Podemos descobrir isso aplicando as funções `min()` e `max()` à coluna que indica o transcorrer temporal no objeto `unesco`:
+
+```{r}
+min(unesco$year)
+
+max(unesco$year)
+```
+
+Com isso, descobrimos que os dados se referem ao período de 2000 a 2023.
+
+Outra pergunta interessante é: qual é o valor mínimo de proficiência em matemática encontrado na base? E qual é o máximo?
+```{r}
+min(unesco$value)
+
+max(unesco$value)
+```
+
+Observem esses extremos. Em algum lugar do mundo, apenas 0.73% dos estudantes ao final do ensino secundário inferior atingem o nível mínimo de proficiência em matemática, enquanto em outro lugar esse valor ultrapassa 94%.
+
+Isso já nos dá uma pista importante: **existe uma enorme heterogeneidade entre os sistemas educacionais ao redor do mundo.**
+
+Mesmo que haja algumas limitações no uso da função `summary()` neste estágio da análise, ela ainda pode nos fornecer algumas informações úteis sobre a base, como a presença de valores ausentes (`NA`):
+```{r}
+summary(unesco)
+```
+
+A partir dessa saída, conseguimos observar algumas coisas interessantes.
+
+Primeiro, aparentemente não há valores ausentes nas variáveis numéricas principais da base.
+
+Segundo, existe pelo menos uma coluna que parece não ser útil para o tipo de análise que pretendemos realizar, o que já nos sugere a possibilidade de removê-la posteriormente.
+
+Terceiro, é importante notar que o `summary()` trata variáveis numéricas e textuais de maneiras diferentes. Em variáveis numéricas, o R reporta estatísticas como mínimo, média e máximo, além da quantidade de `NA`. Já em variáveis do tipo *character*, o comportamento pode ser diferente e a presença de valores ausentes pode não aparecer de forma tão evidente nessa saída.
+
+Por isso, sempre que houver dúvida, vale a pena investigar as colunas individualmente.
+
+A principal função para indicar a presença de um *missing value* é a função `is.na()`:
+```{r}
+is.na(unesco$qualifier)
+```
+
+A função `is.na()` retorna um vetor de valores lógicos (`TRUE` e `FALSE`). O valor `TRUE` indica que a observação é um *missing value* (`NA`), enquanto `FALSE` indica que há um valor presente naquela posição.
+
+Mas como poderíamos contabilizar quantos valores ausentes existem nessa variável?
+
+Uma primeira ideia poderia ser usar a função `length()`:
+```{r}
+length(is.na(unesco$qualifier))
+```
+No entanto, observe o resultado com atenção. A função `length()` retorna `705`, que corresponde simplesmente à quantidade total de elementos do vetor analisado. Ou seja, ela não está contando os *missing values*; ela apenas informa o tamanho do vetor.
+
+Mas agora vem um pequeno truque interessante.
+
+Lembrem-se de que `is.na()` retorna apenas valores lógicos (`TRUE` e `FALSE`). Em R, quando realizamos operações aritméticas com valores lógicos, ocorre uma coerção automática:
+
+```{r}
+TRUE == 1
+FALSE == 0
+```
+Portanto, se somarmos esse vetor lógico, estaremos somando `1` para cada `TRUE`, ou seja, `1` para cada valor ausente. Podemos fazer isso da seguinte forma:
+
+
+```{r}
+sum(is.na(unesco$qualifier))
+```
+
+Pronto. Agora descobrimos que existem 525 *missing values* nessa coluna.
+
+Tá... mas e se quiséssemos contar os valores não-*missing*?
+
+Você provavelmente pensaria em uma conta de subtração do tipo $705−525$. Embora esse raciocínio nos leve a uma resposta correta, no mundo da programação a automatização deve ser a palavra de ordem. Isso ajuda a evitar erros e retrabalho.
+
+Imagine, por exemplo, que você estivesse trabalhando com uma determinada quantidade de dados e, por algum motivo, ocorresse uma atualização na base. Nesse caso, a sua subtração deixaria de funcionar automaticamente, pois os valores teriam mudado.
+
+Para calcularmos diretamente a quantidade de valores não-*missing*, podemos utilizar o operador `!`. O operador `!` indica uma negação lógica.
+```{r}
+sum(!is.na(unesco$qualifier))
+```
+
+Aqui ocorre o seguinte processo:
+
+1. `is.na()` identifica os valores ausentes (`NA`);
+
+2. o operador `!` inverte essa lógica, transformando `TRUE` em `FALSE` e vice-versa;
+
+3. por fim, `sum()` soma os `TRUE`, que passam a representar os valores não-*missing*.
+
+---
+
+Podemos continuar aprofundando a exploração dos nossos dados e revisitar a função `table()`, agora com o objetivo de verificar o balanceamento da base de dados. Em outras palavras, queremos saber se a quantidade de observações é semelhante para cada ano da análise.
+```{r}
+table(unesco$year)
+```
+
+Ao observar o resultado, notamos um desbalanceamento considerável. Há anos que contam com cerca de 80 linhas de informação, enquanto outros apresentam apenas 9.
+
+Também podemos acessar as frequências relativas do balanceamento dos dados com a função prop.table():
+```{r}
+prop.table(table(unesco$year))
+```
+
+Aqui ocorre um pequeno encadeamento de funções.
+
+Primeiro, `table(unesco$year)` calcula a frequência absoluta de observações para cada ano presente na base de dados.
+
+Em seguida, a função `prop.table()` transforma essas frequências absolutas em frequências relativas, ou seja, em proporções que indicam qual fração do total de observações pertence a cada ano.
+
+Em outras palavras, o que estamos observando agora é qual percentual das observações da base corresponde a cada ano da série temporal.
+
+Se quiséssemos visualizar esses valores em termos percentuais (em vez de proporções), poderíamos simplesmente multiplicar o resultado por 100:
+
+```{r}
+prop.table(table(unesco$year)) * 100
+```
+
+
+Isso facilita a interpretação, pois passamos a ler diretamente os valores como percentuais da base total.
+
+Também poderíamos arredondar tudo em 2 ou 3 casas decimais:
+```{r}
+round(x = prop.table(table(unesco$year)) * 100,
+      digits = 2)
+```
+
+
+## Gerando *Subsets* de Análise
+
+Outro momvimento importante pode ser o de propor *subsets*, isto é, subconjunto de dados.
+
+Por exemplo: e se quiséssemos recortar os dados de forma com que observássemos os dados do Brasil, e só do Brasil?
+
+```{r}
+unesco[unesco$geoUnit == "BRA", ]
+```
+
+Perceberam o que fizemos? Nós usamos os operadores de indexação `[]` e operadores de comparação `==` para filtrar a base de dados.
+
+Primeiramente, chamamos o objeto `unesco`. Depois dissemos ao R para retornar somente as observações com valor idêntico a `BRA` que estão presentes no vetor `unesco$geoUnit`.
+
+Se esse método não pareceu intuitivo, vocês podem optar pela função `subset()`, utilizada da seguinte maneira:
+```{r}
+subset(unesco, geoUnit == "BRA")
+```
+
+E aqui cabe a seguinte pergunta: **é possível fazer um subset com mais de um país?**
+
+E a resposta é sim!
+
+Porém, provavelmente, você pensou em alternativas do tipo:
+```{r}
+unesco[unesco$geoUnit == c("BRA", "COL"), ]
+```
+
+ou
+
+```{r}
+subset(unesco, geoUnit == c("BRA", "COL"))
+```
+
+
+Porém, isso, simplesmente, não funciona corretamente.
+
+O problema é que o operador `==` não verifica se um valor pertence a um conjunto. Em vez disso, ele realiza comparações elemento a elemento entre dois vetores.
+
+Ou seja, o R tenta fazer algo equivalente a isto:
+
+```{r eval=FALSE}
+geoUnit[1] == "BRA"
+geoUnit[2] == "COL"
+geoUnit[3] == "BRA"
+geoUnit[4] == "COL"
+```
+
+Em outras palavras, o R vai reciclando o vetor `c("BRA", "COL")` para tentar acompanhar o tamanho do vetor observado. Como o comprimento dos vetores geralmente não é compatível, isso produz resultados incorretos e pode gerar mensagens de aviso.
+
+Tentando deixar o assunto mais claro:
+```{r}
+c("BRA","COL","ARG","PER", "BRA","COL") == c("BRA","COL", "PER")
+```
+
+
+O procedimento correto, nesse caso, é utilizar o operador `%in%`.
+
+O operador `%in%` pode ser interpretado como “está contido em”. Ele verifica, para cada linha da variável analisada, se o valor presente pertence ao conjunto especificado.
+
+Assim, podemos escrever:
+```{r}
+subset(unesco, geoUnit %in% c("BRA", "COL"))
+```
+
+ou, de forma equivalente,
+
+```{r}
+unesco[unesco$geoUnit %in% c("BRA", "COL"), ]
+```
+
+Agora o R irá verificar, linha a linha, se o valor da coluna está presente no conjunto c("BRA", "COL"), retornando apenas as observações correspondentes ao Brasil e à Colômbia.
+
+
+E se você quiser salvar esse *subset*, basta utilizar o operador de atribuição `<-`:
+```{r}
+bra_col <- subset(unesco, geoUnit %in% c("BRA", "COL"))
+```
+
+---
+
+Tá Rafa, mas o objeto `unesco` ainda é do tipo *long*.
+
+<br>
+
+## Pivotando Datasets
+
+Pivotar, no mundo dos dados, diz respeito à reorganização de um *dataset*, normalmente transformando uma base no formato *long* para *wide*, ou de *wide* para *long*.
+
+
+### Pivotando Datasets de Long para Wide
+
+Quando estudarmos o pacote `tidyverse`, prometo que ensinarei um método ainda mais simples para pivotar *datasets*. No momento, porém, eu prefiro não discutir esse pacote porque ele mudará, de forma bastante significativa, a maneira como escreveremos nossos códigos.
+
+Antes de chegar lá, quero que vocês entendam a lógica do R em sua forma mais básica, isto é, como o R pensa em seu modo mais “puro”. Isso será muito útil na trajetória de vocês em uma *skill* extremamente relevante no mundo da pesquisa: saber se virar quando as coisas não estão prontas ou mastigadas.
+
+Vamos ao ponto.
+
+Para pivotar um *dataset* de long para wide, minimamente precisamos dos seguintes elementos na base de dados:
+
+- Uma unidade;
+
+- Um período;
+
+- Um indicador.
+
+No nosso caso:
+
+- unidade indica a granularidade da observação, isto é, quem está sendo observado. Aqui, tratam-se de países ou regiões;
+
+- período representa o transcorrer temporal da análise;
+
+- indicador é o valor que queremos atribuir a cada unidade em cada período. No nosso caso, trata-se da variável value, que representa a proporção de estudantes que atingiram o nível mínimo de proficiência em matemática.
+
+
+Uma maneira bastante simples de reorganizar os dados é utilizando a função `dcast()` do pacote `reshape2`.
+
+Primeiro, carregamos o pacote:
+```{r}
+library(reshape2)
+```
+
+Em seguida, realizamos a pivotagem:
+```{r}
+unesco_wide <- dcast(data = unesco,
+                     formula = geoUnit ~ year,
+                     value.var = "value")
+```
+
+A sintaxe utilizada aqui segue uma lógica bastante intuitiva.
+
+A expressão $ geoUnit \sim year $ pode ser lida da seguinte forma:
+
+1. as linhas da nova tabela serão definidas pelos países;
+
+2. as colunas serão definidas pelo tempo.
+
+Em outras palavras, $linhas \sim colunas$.
+
+Já o argumento `value.var = "value"` indica qual variável contém os valores que devem preencher a nova tabela.
+
+Assim, cada célula da nova tabela passa a representar o valor do indicador para um determinado país em um determinado ano.
+
+Se observarmos o objeto `unesco_wide`, veremos que ele agora apresenta os países nas linhas e os anos nas colunas, caracterizando exatamente um *dataset* no formato *wide*.
+```{r}
+unesco_wide
+```
+Agora sim, podemos explorar com mais facilidade as estatísticas descritivas por país/região e por ano. **Só que aqui cabe um alerta importante:**
+```{r}
+mean(unesco_wide$`2000`)
+```
+
+Note que o comando acima retorna `NA`. Isso acontece porque, por padrão, o R não ignora a presença de *missing values* (`NA`). Quando há pelo menos um valor ausente no vetor analisado, o R não consegue calcular a média e retorna `NA`
+
+Esse comportamento não ocorre apenas com a média. O mesmo problema aparece em várias outras funções estatísticas, como mediana, variância, desvio-padrão, soma, entre outras.
+
+Para resolver esse problema, devemos utilizar o argumento `na.rm = TRUE`, que indica ao R que os valores `NA` devem ser removidos do cálculo.
+
+Assim, podemos calcular estatísticas descritivas da seguinte forma:
+```{r}
+mean(unesco_wide$`2000`, na.rm = T)
+median(unesco_wide$`2000`, na.rm = T)
+sd(unesco_wide$`2000`, na.rm = T)
+var(unesco_wide$`2000`, na.rm = T)
+sum(unesco_wide$`2000`, na.rm = T)
+min(unesco_wide$`2000`, na.rm = T)
+max(unesco_wide$`2000`, na.rm = T)
+```
+
+A partir de agora, acostume-se a utilizar `na.rm = TRUE` sempre que estiver trabalhando com dados reais, pois a presença de valores ausentes é extremamente comum em bases de dados empíricas.
+
+
+### Pivotando Datasets de Wide para Long
+
+Por outro lado, se a sua intenção é pivotar um *dataset* do formato *wide* para *long*, podemos utilizar a função `melt()`, do pacote `reshape2`.
+
+Assim como no caso anterior, precisaremos identificar três elementos fundamentais:
+
+- uma unidade;
+
+- um indicador;
+
+- uma variável que represente o período.
+
+No nosso exemplo, o período está distribuído em várias colunas, e passará a compor uma nova variável a ser criada chamada `year`.
+
+Podemos realizar essa transformação da seguinte forma:
+
+```{r}
+unesco_long <- melt(data = unesco_wide,
+                    id.vars = "geoUnit",
+                    variable.name = "year",
+                    value.name = "value")
+```
+
+Os principais argumentos utilizados na função são:
+
+- `id.vars`: indica qual coluna identifica a unidade de análise, ou seja, os países ou regiões que estão sendo observados;
+
+- `variable.name`: define o nome da nova coluna que armazenará os valores das antigas colunas (no nosso caso, os anos);
+
+- `value.name`: define o nome da coluna que conterá os valores do indicador correspondente a cada unidade em cada período.
+
+Depois de executar o comando acima, o objeto `unesco_long` volta a apresentar os dados no formato *long*, em que cada linha representa uma observação para uma determinada unidade em um determinado ano.
+
+Porém, o objeto `unesco_long` tem 2.464 linhas, enquando que a base de dados original (objeto `unesco`), que também possui formato long, possui somente 705 observações. Por quê?
+
+Isso acontece por causa de como o `melt()` funciona. Qual ela é utilizada, o R transforma todas as colunas de anos em linhas, independentemente de existir valor ou não. Noutras palavras, ele cria todas as combinações possíveis entre país e ano. Por outro lado, o objeto `unesco` só contém observações quando há dado disponível.
+
+## Filtrando Dados
+Lembra que aprendemos a utilizar a função `subset()`? De certa forma, gerar *subsets* já implica realizar algum tipo de filtragem na base de dados.
+
+Porém, em muitas situações queremos aplicar dois ou mais critérios de filtragem simultaneamente. Para isso, precisamos apresentar dois operadores lógicos muito importantes no R:
+
+
+- `&` significa "e";
+
+- `|` significa "ou".
+
+Na prática, eles significam o seguinte:
+```{r eval=FALSE}
+&   todas as condições precisam ser verdadeiras
+|   basta que uma das condições seja verdadeira
+```
+
+
+Esses operadores permitem combinar diferentes condições dentro de um mesmo filtro.
+
+Por exemplo, suponha que desejemos observar apenas os dados referentes ao Brasil e à Colômbia no ano de 2009. Podemos fazer isso da seguinte forma:
+
+```{r}
+subset(unesco, geoUnit %in% c("BRA", "COL") & year == 2009)
+```
+
+Nesse caso, estamos dizendo ao R:
+
+1. selecione observações em que o país seja Brasil ou Colômbia;
+
+2. e em que o ano seja 2009.
+
+Agora imagine outra pergunta: quais países apresentaram desempenho superior a 75% no ano de 2023?
+
+Podemos responder a essa pergunta com:
+```{r}
+subset(unesco, value >= 75 & year == 2023)
+```
+
+Ao executar esse comando, veremos que Japão e Singapura aparecem entre os países com desempenho acima desse patamar.
+
+**Porém, ainda há um pequeno incômodo em nossa base de dados: países e regiões estão misturados na mesma variável.**
+
+Isso significa que, ao realizar análises, poderíamos acabar comparando países individuais com agregados regionais, o que nem sempre faz sentido do ponto de vista analítico.
+
+Surge então a pergunta: **Como poderíamos separar países e regiões nessa base de dados?**
+
+
+**Recomendo que você invista alguns minutos refletindo sobre essa tarefa antes de continuar a leitura.**
+
+---
+
+Se você explorou com atenção a variável que contém países e regiões, provavelmente percebeu um padrão interessante:
+
+- Países são representados por siglas de exatamente três letras (por exemplo, BRA, USA, JPN);
+
+- Regiões ou agregados aparecem como strings mais longas (por exemplo, SDG: World ou Latin America and the Caribbean).
+
+Isso nos sugere uma estratégia bastante simples:
+
+1. contar quantos caracteres existem em cada observação da variável discutida;
+
+2. separar as observações que possuem exatamente três caracteres;
+
+3. separar as observações que possuem mais de três caracteres.
+
+### Contando Caracteres
+Para contar caracteres em uma *string*, o R possui a função `nchar()`.
+
+Podemos utilizá-la da seguinte forma:
+```{r}
+unesco$caracteres <- nchar(unesco$geoUnit)
+```
+
+Nesse comando nós utilizamos o operador `$` para criar uma nova coluna no objeto `unesco` e, depois, aplicamos a função `nchar()` à variável que contém as siglas de países e nomes de regiões. Por fim, o resultado é armazenado na nova coluna chamada `caracteres`.
+
+Agora cada linha da base possui o número de caracteres presentes na variável de interesse!
+
+Podemos conferir rapidamente o resultado:
+```{r}
+head(unesco)
+```
+
+Agora a filtragem se torna bastante simples.
+
+Para criar um *subset* contendo apenas países:
+
+```{r}
+unesco_paises <- subset(unesco, caracteres == 3)
+
+```
+
+E para criar um *subset* contendo regiões ou agregados:
+
+```{r}
+unesco_regioes <- subset(unesco, caracteres > 3)
+```
+
+Dessa forma, passamos a ter duas bases distintas!
+
+Uma boa prática em análise de dados é sempre verificar rapidamente se o procedimento funcionou.
+
+Podemos fazer isso, por exemplo, observando algumas linhas de cada base:
+```{r}
+head(unesco_paises)
+
+head(unesco_regioes)
+```
+
+
+Assim conseguimos confirmar que as siglas de três letras ficaram na base de países, enquanto os nomes mais longos ficaram na base de regiões.
+
+---
+
+Porém, o objeto `unesco_regioes` nos convida a enfrentar um novo desafio.
+
+Se você observar com atenção, perceberá que os nomes das regiões começam com siglas como SDG (*Sustainable Development Goals*) e WB (*World Bank*).
+
+Além disso, há uma diferença importante:
+
+- quando aparece a sigla SDG, ela costuma ser seguida pelo nome de uma região geográfica;
+
+- quando aparece a sigla WB, ela costuma indicar classificações econômicas do Banco Mundial, como níveis de renda.
+
+Noutras palavras, dentro do objeto `unesco_regioes` não temos apenas regiões geográficas. Na verdade, temos diferentes tipos de agregações e indicadores.
+
+Diante disso, vou propor um novo desafio: **Como poderíamos separar os indicadores associados aos SDG daqueles associados ao *World Bank*?**
+
+**Gaste alguns minutos refletindo sobre uma estratégia antes de continuar a leitura.**
+
+### Identificando Padrões Textuais
+
+Nesse caso, contar caracteres não ajudará muito.
+
+Uma estratégia mais adequada consiste em identificar padrões textuais dentro das *strings* e utilizá-los para filtrar os dados.
+
+Para isso, podemos utilizar a função `str_detect()`, do pacote `stringr`.
+
+Essa função verifica se determinado padrão textual aparece dentro de uma *string* e retorna um valor lógico: `TRUE`, se o padrão foi encontrado; `FALSE`, se o padrão não foi encontrado.
+
+Vamos observar um exemplo simples.
+```{r}
+library(stringr)
+
+frutas <- c("abacaxi", "amora", "banana")
+
+str_detect(string = frutas,
+           pattern = "b")
+```
+
+Nesse caso, estamos perguntando ao R: Existe a letra "b" dentro de cada elemento do vetor `frutas`?
+
+Agora observe outro exemplo:
+
+```{r}
+str_detect(string = frutas,
+           pattern = "ana")
+```
+Aqui o padrão buscado passa a ser a sequência de letras "ana".
+
+Podemos aplicar essa mesma lógica ao objeto `unesco_regioes`.
+
+Vamos verificar se o padrão textual "SDG" aparece:
+```{r}
+unesco_regioes$indicador <- str_detect(string = unesco_regioes$geoUnit,
+                                       pattern = "SDG")
+```
+
+Agora podemos criar dois novos subsets.
+
+Um contendo indicadores associados aos SDG:
+```{r}
+unesco_sdg <- subset(unesco_regioes, indicador == T)
+```
+
+E outro contendo os demais indicadores, que neste caso correspondem às classificações do *World Bank*:
+```{r}
+unesco_wb <- subset(unesco_regioes, indicador == F)
+```
+
+
+Agora, a partir do objeto `unesco_sdg`, tente separar os SDG que dizem respeito a indicadores do mundo como todo.
+
+## Ordenando Dados
+
+Outro tipo de manipulação bastante útil consiste em organizar a base de dados segundo algum critério, seja em ordem ascendente ou descendente. Para isso, podemos utilizar a função `order()`.
+
+A função `order()` retorna a posição das observações de acordo com determinado critério, permitindo reorganizar as linhas do *dataset*.
+
+Por exemplo, suponha que desejemos organizar nossa base em ordem alfabética de país ou região:
+```{r}
+unesco[order(unesco$geoUnit), ]
+```
+
+Também podemos ordenar a base de acordo com o valor de determinado indicador. Suponha que queiramos visualizar os países com maior desempenho primeiro. Para isso, utilizamos o operador `-`, que inverte a ordenação:
+```{r}
+unesco[order(-unesco$value), ]
+```
+
+Assim, os países com maiores valores da variável value aparecerão no topo da tabela.
+
+Por fim, também é possível ordenar a base considerando mais de um critério simultaneamente. Por exemplo, podemos organizar a base:
+
+1. primeiro em ordem alfabética de país;
+
+1. e, dentro de cada país, em ordem decrescente de desempenho:
+```{r}
+unesco[order(unesco$geoUnit, -unesco$value), ]
+```
+
+Nesse caso, o R primeiro organiza os dados por país e, em seguida, utiliza o valor da variável value para definir a ordem das observações dentro de cada país.
+
+## Agrupamentos Simples
+Esse tipo de operação é conceitualmente muito importante, pois introduz a ideia de estatísticas calculadas por grupo.
+
+Lembram quando comentei que pode ser um pouco incômodo, para quem está começando, calcular médias anuais das performances dos países quando o *dataset* está no formato *long*?
+
+Felizmente, o R possui uma função que facilita bastante esse tipo de tarefa: a função `aggregate()`.
+
+Essa função permite calcular estatísticas para diferentes grupos de observações, sem que precisemos fazer filtragens manualmente.
+
+Por exemplo, suponha que desejemos calcular a média da performance para cada ano:
+
+```{r}
+aggregate(value ~ year, data = unesco, mean, na.rm = TRUE)
+```
+
+A sintaxe utilizada segue uma lógica bastante intuitiva. A expressão $value \sim year$ pode ser lida da seguinte forma:
+
+1. queremos calcular uma estatística da variável `value`;
+
+2. agrupando as observações de acordo com a variável `year`.
+
+Além disso, especificamos que a estatística desejada é a média, utilizando a função mean.
+
+Caso o interesse seja calcular a mediana por país ou região, basta alterar a variável de agrupamento:
+
+```{r}
+aggregate(value ~ geoUnit, data = unesco, median, na.rm = TRUE)
+```
+
+Nesse caso, o R calculará a mediana da variável value para cada país ou região presente na base de dados.
+
+Esse tipo de operação é extremamente comum em análise de dados, pois muitas vezes queremos resumir grandes bases de dados em estatísticas que representem determinados grupos.
+
+## Ajustando a Natureza das Variáveis
+
+Outro ponto importante na manipulação de dados consiste em definir corretamente a natureza de cada variável presente no *dataset*.
+
+Em outras palavras, precisamos ter certeza de que o R está interpretando:
+
+- variáveis quantitativas como variáveis numéricas (*numeric*, ou *integer* a depender do caso);
+
+- variáveis categóricas como dados qualitativos (*factor*).
+
+Isso é importante porque muitas funções de análise de dados do R se comportam de maneira diferente dependendo do tipo da variável!
+
+Vamos começar observando a estrutura atual do objeto `unesco_paises` com o auxílio da função `str()`:
+```{r}
+str(unesco_paises)
+```
+
+A função `str()` (*structure*) apresenta uma visão resumida da estrutura do objeto. Ao lado de cada coluna aparece uma sigla que indica o tipo de dado armazenado naquela variável. Algumas das mais comuns são:
+
+- chr (*character*): texto;
+
+- num (*numeric*): números com possíveis casas decimais;
+
+- int (*integer*): número inteiro;
+
+- logi (*logical*): valores lógicos (`TRUE`, `FALSE` ou `NA`).
+
+No nosso caso, praticamente todas as variáveis já possuem o tipo adequado. No entanto, a coluna que identifica os países, ainda está armazenada como texto (*character*).
+
+Como essa variável representa categorias, faz mais sentido tratá-la como um *factor*.
+
+Podemos fazer isso da seguinte forma:
+```{r}
+unesco_paises$geoUnit <- factor(unesco_paises$geoUnit)
+```
+
+Nós já conversamos sobre a função `factor()`, lembram?
+
+Ela é utilizada para indicar ao R que determinada variável representa categorias, e não números ou textos livres.
+
+Cada categoria de uma variável do tipo *factor* é chamada de *level* (nível).
+
+Podemos verificar quais são os níveis presentes na variável de interesse utilizando a função `levels()`:
+
+```{r}
+levels(unesco_paises$geoUnit)
+```
+Note que o resultado desse comando não mostra os valores da coluna linha por linha, mas sim quais são as categorias possíveis da variável.
+
+Se quisermos saber quantos níveis existem, podemos fazer:
+```{r}
+length(levels(unesco_paises$geoUnit))
+```
+Nesse caso, estamos obtendo a quantidade de países presentes na base de dados.
+
+
+Um detalhe interessante é que transformar uma variável em *factor* também muda o comportamento de algumas funções estatísticas.
+
+Observe, por exemplo, o resultado da função `summary()`:
+```{r}
+summary(unesco_paises)
+```
+Quando a variável é do tipo *factor*, a função `summary()` passa a apresentar uma tabela de frequências, indicando quantas vezes cada categoria aparece no *dataset*. Esse comportamento é diferente daquele observado em variáveis numéricas ou textuais!
+
+
+Para converter variáveis entre diferentes tipos, podemos utilizar algumas funções bastante comuns:
+```{r eval=FALSE}
+as.character() # Para indicar que uma variável é um texto
+as.numeric() # Para indicar que uma variável é métrica (em regra, contínua)
+as.integer() # Para indicar que uma variável é discreta
+as.factor() # Mesmo efeito da função factor().
+```
+
+Essas funções são muito úteis em processos de limpeza e preparação de dados, especialmente quando trabalhamos com bases importadas de planilhas, arquivos CSV ou bancos de dados externos.
+
+## Excluindo Dados
+
+Em algumas situações, podemos nos deparar com colunas que não são relevantes para nossa análise. Nesses casos, pode ser conveniente removê-las do *dataset*.
+
+Antes de mostrar como fazer isso, vale uma observação importante.
+
+Vou ensinar aqui como excluir colunas e objetos no R, mas, **francamente, considero essa uma operação potencialmente arriscada para iniciantes.** Não porque isso possa prejudicar sua máquina (longe disso), mas porque, quando estamos começando a programar, é comum fazermos confusão entre objetos e acabarmos apagando coisas que não deveríamos apagar.
+
+Por essa razão, minha recomendação para quem está começando é simples: **evite apagar colunas ou objetos, a menos que tenha certeza do que está fazendo.**
+
+
+Muitas vezes é mais seguro criar novos objetos ou simplesmente ignorar as colunas que não serão utilizadas.
+
+### Excluindo uma Coluna
+
+Ainda assim, caso você queira remover uma coluna específica do *dataset*, podemos fazer isso atribuindo o valor `NULL` a ela.
+
+Por exemplo, suponha que desejemos remover a coluna *magnitude* do objeto `unesco`:
+```{r}
+unesco$magnitude <-  NULL
+```
+
+Nesse comando, estamos dizendo ao R que a coluna *magnitude* não deve mais existir dentro do objeto `unesco`.
+
+```{r}
+head(unesco)
+```
+
+Assim podemos confirmar que a coluna foi removida.
+
+### Excluindo Objetos
+
+ambém é possível excluir objetos inteiros do ambiente de trabalho utilizando a função `rm()` (*remove*):
+```{r}
+rm(unesco_regioes)
+```
+
+Esse comando remove completamente o objeto `unesco_regioes` do *Global Environment*.
+
+Novamente, vale o alerta: **use esse comando com cautela, especialmente quando estiver começando a trabalhar com R.**
+
+Uma boa prática para quem é iniciante é **criar uma cópia do objeto antes de modificar ou excluir colunas:**
+```{r}
+unesco_paises_raw <- unesco_paises
+```
+
+Assim, caso algo dê errado, você ainda terá uma cópia da base original.
